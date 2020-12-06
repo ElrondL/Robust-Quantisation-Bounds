@@ -656,7 +656,7 @@ check_negative(check_output);
 output_inspect = difference - check_output;
 
 mean(mean(output_inspect))
-
+ 
 % end
 % 
 % save('W_save_BinaryQuant.mat','W_1','Wc_1','b_1','bc_1','Wl_1','bl_1','Wx_1','bx_1');
