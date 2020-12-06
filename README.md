@@ -4,7 +4,7 @@ This repository contains codes for the SDP-based frame work to provide robust bo
 
 We welcome collab via branching; please provide your identification and contact details in your branch's description!
 
-Our paper is on arxiv here: http://arxiv.org/abs/2012.00138
+Our paper is on arxiv here: http://arxiv.org/abs/2012.00138.
 If you find information presented in this paper useful, please consider citing our paper:
 ```
 @misc{li2020robust,
