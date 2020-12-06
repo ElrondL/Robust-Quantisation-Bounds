@@ -1,7 +1,7 @@
 clear; close all; clc;
 %%ANN model: MLP
 
-% Jul 15 2020
+% Dec 06 2020
 % Jiaqi Li, Ross Drummond
 % Department of Engineering, University of Oxford
 
@@ -15,13 +15,12 @@ clear; close all; clc;
 % Quantization Comparison mode: set one random NN and set the second NN to
 % equal the first, set second input to be quantized version of the first,
 % set qc for quantization multiplier to one in M
-% **Activate line 46 and 48
-% **Set line 34 quantization_mode = 1
+% **Activate line 47 and 49
+% **Set line 35 quantization_mode = 1
 
-% Dec 06 2020
-
-% for prune mode run prunefunction, load the pruned weight parameters for NN2, let the biases = NN1's biases
-% **Activate line
+% Prune mode: run prunefunction.m on a saved set of NN1 weights and save it as NN2's weights
+% load all weight and biases parameters for NN1, pruned weight parameters for NN2, and let the biases = NN1's biases
+% **Activate line 47, 50 and 51
 
 
 %% Set up part
@@ -46,8 +45,9 @@ number= 2*n_x+2*N_out+1; %Size of the zeta matrix. Contains both x_1 and x_2, al
 %load('W_save_2BPruned.mat'); % SAVED AN INTERESTING SET OF WEIGHTS AND BIASES
 %W_2 = W_1;b_2 =b_1;Wc_2 = Wc_1;bc_2 = bc_1;Wl_2 = Wl_1;bl_2 = bl_1;Wx_2= Wx_1;bx_2 = bx_1;
 %W_2 = quantize_cell_Binary(W_1, q_level); Wc_2 = quantize_matrix_Binary(Wc_1, q_level);b_2 =quantize_cell_Binary(b_1, q_level); bc_2 = quantize_matrix_Binary(bc_1, q_level);Wl_2 = quantize_matrix_Binary(Wl_1, q_level);bl_2 = quantize_matrix_Binary(bl_1, q_level);Wx_2= quantize_matrix_Binary(Wx_1, q_level);bx_2 = quantize_matrix_Binary(bx_1, q_level);
-%load('W_save_pruned.mat')
 %b_2 =b_1;bc_2 = bc_1;bl_2 = bl_1;bx_2 = bx_1;%pruning mode
+%load('W_save_pruned.mat')
+
 
 
 % savefile = 'W_save_1.mat';
