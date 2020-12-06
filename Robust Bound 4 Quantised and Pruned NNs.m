@@ -32,7 +32,7 @@ compNR = complexity(n_x, nf, n, l-1) %number of computations
 q_level = 3; %quantize to 0.001
 quantization_mode = 0; %set to 1 when on quantization mode, set back to zero for comparison mode
 
-N = sum(n); %total number of nonlinearities
+N = sum(n); %total number of nonlinearities 
 Nin = n_x + sum(n(1:l-1)); % dimensions of the "arguements" of the activation functions.
 Nout = sum(n(1:l-1));
 N_out = Nout;
