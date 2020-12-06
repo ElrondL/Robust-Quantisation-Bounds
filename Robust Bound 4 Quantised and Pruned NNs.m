@@ -165,7 +165,7 @@ for i = 1:N_out
         %slope conditions for the first NN
         
         phi_diff_2 = phi2_mat(i,:)-phi2_mat(j,:);y_diff_2 = xi2_mat(i,:)-xi2_mat(j,:);
-        slope_2 = slope_2  + (y_diff_2-phi_diff_2)'*tau_slope_2(i,j)*phi_diff_2;
+        slope_2 = slope_2  + (y_diff_2-phi_diff_2)'*tau_slope_2(i,j)*phi_diff_2; 
         %slope conditions for the second NN
     end
 end
