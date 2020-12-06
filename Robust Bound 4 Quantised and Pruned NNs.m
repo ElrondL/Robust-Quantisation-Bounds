@@ -1,36 +1,28 @@
 clear; close all; clc;
-% A copy of Ross's robust_NN_guarantees where I record the things I've tried, results see log_robust_NN_guarantees
 %%ANN model: MLP
 
-% Jul 15 2020 Jiaqi Li Comment:
+% Jul 15 2020
+% Jiaqi Li, Ross Drummond
+% Department of Engineering, University of Oxford
 
 % Compare NN mode: set qc for quantization multiplier to zero in M, set input to be
 % different random vectors, set two random NNs
 
 % Self-compare NN mode: set qc for quantization multiplier to zero in M, set input to be
-% different random vectors, set one random NN and set the second NN to
-% equal the first
+% different random vectors, set one random NN and set the second NN to equal the first
+% **Activate line 46 and 47, Deactivate line 44
 
 % Quantization Comparison mode: set one random NN and set the second NN to
 % equal the first, set second input to be quantized version of the first,
 % set qc for quantization multiplier to one in M
+% **Activate line 46 and 48
+% **Set line 34 quantization_mode = 1
 
-% Status: with bare cost function (w = 0) script is robust for self-compare
-% NN mode and quantization comparison mode but not robust for
-% compare NN mode
+% Dec 06 2020
 
-% Status: with bare cost function (w = 0) script is robust for self-compare
-% NN mode and quantization comparison mode but not robust for
-% compare NN mode
-% with w_const > 1 and w_x = 1 script is more robust for all mode
-% compare NN mode but could still produce leaky bounds
-% 
-% error_region = [];
-% 
-% while isempty(error_region) == 1
+% for prune mode run prunefunction, load the pruned weight parameters for NN2, let the biases = NN1's biases
+% **Activate line
 
-%for prune mode run prunefunction, load the pruned weight parameters for
-%NN2, let the biases = NN1's biases
 
 %% Set up part
 n = [10,10,10,10]; % number of neurons per hidden layer. 
@@ -48,24 +40,23 @@ N_out = Nout;
 
 number= 2*n_x+2*N_out+1; %Size of the zeta matrix. Contains both x_1 and x_2, all the nonlinearities of both neural networks and a constant term.
 
-% [W_1,Wc_1,b_1,bc_1,Wl_1,bl_1,Wx_1,bx_1] = compute_weights(n,l,n_x,nf); % Generate random weights for the first neural network.
-%[W_2,Wc_2,b_2,bc_2,Wl_2,bl_2,Wx_2,bx_2] = compute_weights(n,l,n_x,nf); % Generate random weights for the second neural network.
+[W_1,Wc_1,b_1,bc_1,Wl_1,bl_1,Wx_1,bx_1] = compute_weights(n,l,n_x,nf); % Generate random weights for the first neural network.
+[W_2,Wc_2,b_2,bc_2,Wl_2,bl_2,Wx_2,bx_2] = compute_weights(n,l,n_x,nf); % Generate random weights for the second neural network.
 
-load('W_save_2BPruned.mat'); % SAVED AN INTERESTING SET OF WEIGHTS AND BIASES
+%load('W_save_2BPruned.mat'); % SAVED AN INTERESTING SET OF WEIGHTS AND BIASES
 %W_2 = W_1;b_2 =b_1;Wc_2 = Wc_1;bc_2 = bc_1;Wl_2 = Wl_1;bl_2 = bl_1;Wx_2= Wx_1;bx_2 = bx_1;
 %W_2 = quantize_cell_Binary(W_1, q_level); Wc_2 = quantize_matrix_Binary(Wc_1, q_level);b_2 =quantize_cell_Binary(b_1, q_level); bc_2 = quantize_matrix_Binary(bc_1, q_level);Wl_2 = quantize_matrix_Binary(Wl_1, q_level);bl_2 = quantize_matrix_Binary(bl_1, q_level);Wx_2= quantize_matrix_Binary(Wx_1, q_level);bx_2 = quantize_matrix_Binary(bx_1, q_level);
-b_2 =b_1;bc_2 = bc_1;bl_2 = bl_1;bx_2 = bx_1;%pruning mode
-load('W_save_pruned.mat')
+%load('W_save_pruned.mat')
+%b_2 =b_1;bc_2 = bc_1;bl_2 = bl_1;bx_2 = bx_1;%pruning mode
 
-% savefile = 'W_save_wrong_quantize.mat';
+
+% savefile = 'W_save_1.mat';
 % save('W_save.mat','W_1','Wc_1','b_1','bc_1','Wl_1','bl_1','Wx_1','bx_1');
-% savefile = 'W_save_wrong_quantize.mat';
+% savefile = 'W_save_2.mat';
 % save('W_save.mat','W_2','Wc_2','b_2','bc_2','Wl_2','bl_2','Wx_2','bx_2');
-
 
 % b1_1 = 0; b1_2 = 0; %Set the output biases to zero.
 % bl_1 = 0; bl_2 = 0; %Set the output biases to zero.
-
 
 %% ANN part
 Nsamples = 1e2 + quantization_mode*1; % number of samples of the input space
