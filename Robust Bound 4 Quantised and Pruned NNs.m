@@ -5,6 +5,8 @@ clear; close all; clc;
 % Jiaqi Li, Ross Drummond
 % Department of Engineering, University of Oxford
 
+% ***** if your MATLAB has vecnorm function, simply disable the vecnorm function script
+
 % Compare NN mode: set qc for quantization multiplier to zero in M, set input to be
 % different random vectors, set two random NNs
 
@@ -18,7 +20,7 @@ clear; close all; clc;
 % **Activate line 47 and 49
 % **Set line 35 quantization_mode = 1
 
-% Prune mode: run prunefunction.m on a saved set of NN1 weights and save it as NN2's weights
+% Prune mode: run prune_Universal.m on a saved set of NN1 weights and save it as NN2's weights
 % load all weight and biases parameters for NN1, pruned weight parameters for NN2, and let the biases = NN1's biases
 % **Activate line 47, 50 and 51
 
