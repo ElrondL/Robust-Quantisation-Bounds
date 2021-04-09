@@ -1,40 +1,47 @@
 clear; close all; clc;
+% A copy of Ross's robust_NN_guarantees where I record the things I've tried, results see log_robust_NN_guarantees
 %%ANN model: MLP
 
-% Dec 06 2020
-% Jiaqi Li, Ross Drummond
-% Department of Engineering, University of Oxford
-
-% ***** if your MATLAB has vecnorm function, simply disable the vecnorm function script
+% Jul 15 2020 Jiaqi Li Comment:
 
 % Compare NN mode: set qc for quantization multiplier to zero in M, set input to be
 % different random vectors, set two random NNs
 
 % Self-compare NN mode: set qc for quantization multiplier to zero in M, set input to be
-% different random vectors, set one random NN and set the second NN to equal the first
-% **Activate line 46 and 47, Deactivate line 44
+% different random vectors, set one random NN and set the second NN to
+% equal the first
 
 % Quantization Comparison mode: set one random NN and set the second NN to
 % equal the first, set second input to be quantized version of the first,
 % set qc for quantization multiplier to one in M
-% **Activate line 47 and 49
-% **Set line 35 quantization_mode = 1
 
-% Prune mode: run prune_Universal.m on a saved set of NN1 weights and save it as NN2's weights
-% load all weight and biases parameters for NN1, pruned weight parameters for NN2, and let the biases = NN1's biases
-% **Activate line 47, 50 and 51
+% Status: with bare cost function (w = 0) script is robust for self-compare
+% NN mode and quantization comparison mode but not robust for
+% compare NN mode
 
+% Status: with bare cost function (w = 0) script is robust for self-compare
+% NN mode and quantization comparison mode but not robust for
+% compare NN mode
+% with w_const > 1 and w_x = 1 script is more robust for all mode
+% compare NN mode but could still produce leaky bounds
+% 
+% error_region = [];
+% 
+% while isempty(error_region) == 1
+
+%for prune mode run prunefunction, load the pruned weight parameters for
+%NN2, let the biases = NN1's biases
 
 %% Set up part
-n = [10,10,10,10]; % number of neurons per hidden layer. 
-l = 5; % number of weights and biases sets (number of transitions)
+n = [10,10]; % number of neurons per hidden layer. 
+l = 3; % number of weights and biases sets (number of transitions)
 n_x = 1; %dimension of the input data.
 nf = 1; %dimension of the output
 compNR = complexity(n_x, nf, n, l-1) %number of computations
-q_level = 3; %quantize to 0.001
-quantization_mode = 0; %set to 1 when on quantization mode, set back to zero for comparison mode
+q_level = 2; %quantize to 0.001
+quantization_mode = 1; %set to 1 when on quantization mode, set back to zero for comparison mode
 
-N = sum(n); %total number of nonlinearities 
+N = sum(n); %total number of nonlinearities
 Nin = n_x + sum(n(1:l-1)); % dimensions of the "arguements" of the activation functions.
 Nout = sum(n(1:l-1));
 N_out = Nout;
@@ -42,32 +49,32 @@ N_out = Nout;
 number= 2*n_x+2*N_out+1; %Size of the zeta matrix. Contains both x_1 and x_2, all the nonlinearities of both neural networks and a constant term.
 
 [W_1,Wc_1,b_1,bc_1,Wl_1,bl_1,Wx_1,bx_1] = compute_weights(n,l,n_x,nf); % Generate random weights for the first neural network.
-[W_2,Wc_2,b_2,bc_2,Wl_2,bl_2,Wx_2,bx_2] = compute_weights(n,l,n_x,nf); % Generate random weights for the second neural network.
+%[W_2,Wc_2,b_2,bc_2,Wl_2,bl_2,Wx_2,bx_2] = compute_weights(n,l,n_x,nf); % Generate random weights for the second neural network.
 
-%load('W_save_2BPruned.mat'); % SAVED AN INTERESTING SET OF WEIGHTS AND BIASES
-%W_2 = W_1;b_2 =b_1;Wc_2 = Wc_1;bc_2 = bc_1;Wl_2 = Wl_1;bl_2 = bl_1;Wx_2= Wx_1;bx_2 = bx_1;
-%W_2 = quantize_cell_Binary(W_1, q_level); Wc_2 = quantize_matrix_Binary(Wc_1, q_level);b_2 =quantize_cell_Binary(b_1, q_level); bc_2 = quantize_matrix_Binary(bc_1, q_level);Wl_2 = quantize_matrix_Binary(Wl_1, q_level);bl_2 = quantize_matrix_Binary(bl_1, q_level);Wx_2= quantize_matrix_Binary(Wx_1, q_level);bx_2 = quantize_matrix_Binary(bx_1, q_level);
-%b_2 =b_1;bc_2 = bc_1;bl_2 = bl_1;bx_2 = bx_1;%pruning mode
-%load('W_save_pruned.mat')
+% load('W_save_2BPruned.mat'); % SAVED AN INTERESTING SET OF WEIGHTS AND BIASES
+% %W_2 = W_1;b_2 =b_1;Wc_2 = Wc_1;bc_2 = bc_1;Wl_2 = Wl_1;bl_2 = bl_1;Wx_2= Wx_1;bx_2 = bx_1;
+W_2 = quantize_cell_Binary(W_1, q_level); Wc_2 = quantize_matrix_Binary(Wc_1, q_level);b_2 =quantize_cell_Binary(b_1, q_level); bc_2 = quantize_matrix_Binary(bc_1, q_level);Wl_2 = quantize_matrix_Binary(Wl_1, q_level);bl_2 = quantize_matrix_Binary(bl_1, q_level);Wx_2= quantize_matrix_Binary(Wx_1, q_level);bx_2 = quantize_matrix_Binary(bx_1, q_level);
+% b_2 =b_1;bc_2 = bc_1;bl_2 = bl_1;bx_2 = bx_1;%pruning mode
+% load('W_save_pruned.mat')
 
+savefile = 'W_save_NN1_Q.mat';
+save('W_save_NN1_Q.mat','W_1','Wc_1','b_1','bc_1','Wl_1','bl_1','Wx_1','bx_1');
+savefile = 'W_save_NN2_Q.mat';
+save('W_save_NN2_Q.mat','W_2','Wc_2','b_2','bc_2','Wl_2','bl_2','Wx_2','bx_2');
 
-
-% savefile = 'W_save_1.mat';
-% save('W_save.mat','W_1','Wc_1','b_1','bc_1','Wl_1','bl_1','Wx_1','bx_1');
-% savefile = 'W_save_2.mat';
-% save('W_save.mat','W_2','Wc_2','b_2','bc_2','Wl_2','bl_2','Wx_2','bx_2');
 
 % b1_1 = 0; b1_2 = 0; %Set the output biases to zero.
 % bl_1 = 0; bl_2 = 0; %Set the output biases to zero.
+
 
 %% ANN part
 Nsamples = 1e2 + quantization_mode*1; % number of samples of the input space
 x_up = 1e0; %upper limit for the input x, x< x_up
 x_lower = -1e0;
 samp_space_1 = generate_samples(x_up, x_lower, Nsamples, n_x);
-samp_space_2 = generate_samples(x_up, x_lower, Nsamples, n_x);
+%samp_space_2 = generate_samples(x_up, x_lower, Nsamples, n_x);
 %samp_space_1 = quantize_matrix_Binary(samp_space_1,q_level);
-%samp_space_2 = quantize_matrix_Binary(samp_space_1,q_level);
+samp_space_2 = quantize_matrix_Binary(samp_space_1,q_level);
 %samp_space_2 = quantize_matrix_Binary(samp_space_2,q_level);
 f_1 = zeros(nf, Nsamples);
 f_2 = zeros(nf, Nsamples);
@@ -118,6 +125,7 @@ one_mat_x = [zeros(n_x,2*n_x+2*N_out),ones(n_x,1)]; % Defines another vector of 
 
 f_1_mat = [zeros(nf,2*n_x + N_out-n(l-1)),Wl_1, zeros(nf,N_out),bl_1]; % Defines the output of the first NN
 f_2_mat = [zeros(nf,2*n_x + 2*N_out-n(l-1)),Wl_2 ,bl_2]; % Defines the output of the second NN
+x_crx_mat = [x1_mat, x2_mat, x2_mat-x1_mat, 1];
 
 %generate the lambdas
 tau_slope = sdpvar(N_out,N_out);
@@ -145,9 +153,14 @@ tau_x_2_quantize = sdpvar(n_x,n_x,'diagonal');
 tau_x_j = sdpvar(n_x,n_x,'diagonal');
 tau_x_j_m = sdpvar(n_x,n_x,'diagonal');
 
-
 gamma = sdpvar;
 gamma_affine = sdpvar;
+
+gamma1 = sdpvar;
+gamma2 = sdpvar;
+
+tau_gamma_mat = blkdiag(gamma1*eye(length(x1_mat)),gamma2*eye(length(x2_mat)),gamma*eye(length(x1_mat)),gamma_affine);
+
 
 %Conditions
 
@@ -165,7 +178,7 @@ for i = 1:N_out
         %slope conditions for the first NN
         
         phi_diff_2 = phi2_mat(i,:)-phi2_mat(j,:);y_diff_2 = xi2_mat(i,:)-xi2_mat(j,:);
-        slope_2 = slope_2  + (y_diff_2-phi_diff_2)'*tau_slope_2(i,j)*phi_diff_2; 
+        slope_2 = slope_2  + (y_diff_2-phi_diff_2)'*tau_slope_2(i,j)*phi_diff_2;
         %slope conditions for the second NN
     end
 end
@@ -222,9 +235,9 @@ x1_m_x2 = x2_mat-x1_mat; %Difference between the first and second inputs x_1-x_2
 f1_m_f2 = f_2_mat-f_1_mat; % what we care about is the difference between the outputs of the first and second NNs f_1(x_1)-f_2(x_2). Doesn't matter if it the difference of the second and first.
 
 One_mat = blkdiag(zeros(2*n_x+2*Nout,2*n_x+2*Nout),1);
-output = f1_m_f2'*f1_m_f2-gamma*(x1_m_x2'*x1_m_x2)-1*gamma_affine*One_mat;
+output = f1_m_f2'*f1_m_f2-gamma*(x1_m_x2'*x1_m_x2)- gamma1*(x1_mat'*x1_mat) -gamma2*(x2_mat'*x2_mat)-1*gamma_affine*One_mat;
 output_q = f1_m_f2'*f1_m_f2-gamma*(x1_mat'*x1_mat)-1*gamma_affine*One_mat;
-
+output_crx = f1_m_f2*f1_m_f2' - x_crx_mat*tau_gamma_mat*x_crx_mat';
 
 %This bit basically makes all the matrices deifned above symmettric.
 % sec_1  = 0.5*(sec_1+sec_1');
@@ -271,12 +284,13 @@ complimentarity = comp_1+comp_2;
 
 if quantization_mode == 0
 
-    M = output + sector_slope + x_constraints+1*positivity+1*comp_positivity+1*cross_terms+1*complimentarity;
+    M = output+ sector_slope + x_constraints+1*positivity+1*comp_positivity+1*cross_terms+1*complimentarity;
 
 else
     
     M = output_q + sector_slope + x_constraints+1*positivity+1*comp_positivity+1*cross_terms+1*complimentarity;
-    
+    %to see wavy quantisation bound set output to output_q but retain
+    %everything else, set gamma_affine to be 50 % w_x2 = 10e0; w_x3 = 10e0
 end
 
 %%The matrix that constains all of the inequalities above. This is the main guy.
@@ -316,25 +330,52 @@ F = [F, tau_phi_2_quantize >=tol1 ];
 F = [F, tau_x_j >=tol1 ];
 F = [F, tau_x_j_m >=tol1 ];
 
+
 tol2 = 1e-8;
 % tol2 = 1e1;
 
-
-F = [F, gamma >= tol2, ];
+F = [F, tau_gamma_mat >= tol2];
+F = [F, gamma >= tol2];
 F = [F, gamma_affine >= tol2]; %We want our bounds to be positive.
-
-
+F = [F, gamma1 >= tol2];
+%F = [F, gamma1_affine >= tol2]; %We want our bounds to be positive.
+F = [F, gamma2 >= tol2];
+%F = [F, gamma2_affine >= tol2]; %We want our bounds to be positive.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%solution generation
-w_x = 1e0; w_const = 1e0; %weights for the objective function
-obj = w_x*gamma+ w_const*gamma_affine; %the objective function.
+%w_x1 = 1e0; w_const1 = 1e0; w_x2 = 1e0; w_x3 = 1e0; %weights for the objective function, 50/100 is good weight for affine term, tune to 10000 to see some interesting results
+w_x1 = ((2^(-2))^2)^-1; w_const1 = 1e0; w_x2 = ((0.1+2^(-2))^2)^-1; w_x3 = ((0.1)^2)^-1; %weights for the objective function, 50/100 is good weight for affine term, tune to 10000 to see some interesting results
+w_mat = blkdiag(w_x1*eye(length(x1_mat)), w_x2*eye(length(x1_mat)), w_x3*eye(length(x1_mat)), w_const1);
+% if quantization_mode == 0
+    
+    obj = w_x1*gamma+ w_const1*gamma_affine + w_x2*gamma1 + w_x3*gamma2; %the objective function.
+    obj_mat = w_mat*tau_gamma_mat;
+    obj2 = trace(obj_mat);
+    obj3 = gamma*(2^(-2))^2+1e6*gamma_affine + (0.1+2^(-2))^2*gamma1 + (0.1)^2*gamma2; 
+% else
+%     
+%     obj = w_x1*gamma+ w_const1*gamma_affine; %the objective function.
+%     
+% end
+
+    
 %obj = 1*norm(output, Inf)+ w_x*gamma + w_const*gamma_affine; %the output cost function.
 % obj = []; %no objective function.
-sol2 = optimize(F,obj,sdpsettings('solver','mosek')); %run the optimisation
+sol2 = optimize(F,obj3,sdpsettings('solver','mosek')); %run the optimisation
 sol = sol2.problem
 Mval = value(M);
 gamma_val = value(gamma) %this converts the sdp variable into a real one
 gamma_affine_val = value(gamma_affine) %this converts the sdp variable into a real one
+
+% if quantization_mode == 0
+    
+    gamma_val2 = value(gamma1) %this converts the sdp variable into a real one
+    %gamma_affine_val2 = value(gamma1_affine) %this converts the sdp variable into a real one
+    gamma_val3 = value(gamma2) %this converts the sdp variable into a real one
+    %gamma_affine_val3 = value(gamma2_affine) %this converts the sdp variable into a real one
+%     
+% end
+
 
 
 % Graphing part
@@ -352,7 +393,8 @@ if quantization_mode == 1
     error = zeros(1,Nsamples); bound = zeros(1,Nsamples);
     for i=1:Nsamples
             error(i) = (f_1(i)-f_2(i)).^2;
-            bound(i) = gamma_val*(samp_space_1(i)).^2+1*gamma_affine_val; %+ (l-1)*compNR*(c/2);
+            %bound(i) = gamma_val*(samp_space_1(i)).^2+1*gamma_affine_val; %+ (l-1)*compNR*(c/2);
+            bound(i) = gamma_val*(samp_space_1(i)-samp_space_2(i)).^2 + gamma_val2*(samp_space_1(i)).^2 + gamma_val3*(samp_space_2(i)).^2+gamma_affine_val;
             %bound(i) = gamma_val*(samp_space_1(i)-samp_space_2(i)).^2+gamma_affine_val;
     end
     
@@ -360,7 +402,8 @@ if quantization_mode == 1
     semilogy(samp_space_1, error, 'k', 'linewidth', 2); hold on; 
     semilogy(samp_space_1, bound, 'r', 'linewidth', 2); hold on;
     semilogy(samp_space_2, 10^-6, '+k', 'linewidth', 2); hold on;
-    xlabel('x','interpreter','latex','fontsize',f_size)
+    set(gca,'fontsize',f_size+10)
+    xlabel('x','interpreter','latex','fontsize',f_size+10)
     %ylabel('value','interpreter','latex','fontsize',f_size)
     leg = legend('ln($(f_1(x_1)-f_2(x_2))^2)$','ln$(\gamma_x (x_1)^2 + \gamma)$');
     set(leg,'fontsize',f_size,'interpreter','latex','location','best')
@@ -377,8 +420,8 @@ else
         for i=1:Nsamples
             for j = 1:Nsamples
                 error(i,j) = (f_1(i)-f_2(j)).^2;
-                bound(i,j) = gamma_val*(samp_space_1(i)-samp_space_2(j)).^2+gamma_affine_val;
-                bound(i,j) = gamma_val*(samp_space_1(i)).^2+gamma_affine_val;
+                bound(i,j) = gamma_val*(samp_space_1(i)-samp_space_2(j)).^2 + gamma_val2*(samp_space_1(i)).^2 + gamma_val3*(samp_space_2(j)).^2+gamma_affine_val;
+                %bound(i,j) = gamma_val*(samp_space_1(i)).^2+gamma_affine_val;
             end
         end
 
@@ -391,8 +434,9 @@ else
         s2 = surf(X,Y,log(error),'FaceAlpha',0.7); hold on;
         s = surf(X,Y,log(bound),'FaceAlpha',0.5,'FaceColor','black'); hold on;
         % s3 = surf(X,Y,log(bound)-log(error),'FaceAlpha',0.5,'FaceColor','magenta'); hold on;
-        xlabel('$x_1$','interpreter','latex','fontsize',f_size)
-        ylabel('$x_2$','interpreter','latex','fontsize',f_size)
+        set(gca,'fontsize',f_size)
+        xlabel('$x_1$','interpreter','latex','fontsize',f_size+10)
+        ylabel('$x_2$','interpreter','latex','fontsize',f_size+10)
         grid on
         leg = legend('ln($(f_1(x_1)-f_2(x_2))^2)$','ln$(\gamma_x (x_1-x_2)^2 + \gamma)$');
         set(leg,'fontsize',f_size,'interpreter','latex','location','best')
@@ -401,32 +445,34 @@ else
 
         fig_surf_error = figure;
         s3 = surf(X,Y,log(error./bound),'FaceAlpha',1,'FaceColor','magenta'); hold on;
-        xlabel('$x_1$','interpreter','latex','fontsize',f_size)
-        ylabel('$x_2$','interpreter','latex','fontsize',f_size)
+        set(gca,'fontsize',f_size)
+        xlabel('$x_1$','interpreter','latex','fontsize',f_size+10)
+        ylabel('$x_2$','interpreter','latex','fontsize',f_size+10)
         grid on
         leg = legend('ln\Bigg($\frac{(f_1(x_1)-f_2(x_2))^2}{\gamma_x (x_1-x_2)^2 + \gamma}$\Bigg)');
         set(leg,'fontsize',f_size,'interpreter','latex','location','best')
         box
         s3.EdgeColor = 'cyan';
 
-        fig_all = figure;
-        s = surf(X,Y,log(bound),'FaceAlpha',0.5,'FaceColor','black'); hold on;
-        s2 = surf(X,Y,log(error)); hold on;
-        s3 = surf(X,Y,log(error./bound),'FaceAlpha',1,'FaceColor','magenta'); hold on;
-        xlabel('$x_1$','interpreter','latex','fontsize',f_size)
-        ylabel('$x_2$','interpreter','latex','fontsize',f_size)
-        grid on
-        leg = legend('ln($(f_1(x_1)-f_2(x_2))^2)$','ln$(\gamma_x (x_1-x_2)^2 + \gamma)$', 'ln\Bigg($\frac{(f(x_1)-f(x_2))^2}{\gamma (x_1-x_2)^2 + \gamma_{affine}}$\Bigg)');
-        set(leg,'fontsize',f_size,'interpreter','latex','location','best')
-        box
-        s.EdgeColor = 'none'; s2.EdgeColor = 'none'; s3.EdgeColor = 'cyan';
+%         fig_all = figure;
+%         s = surf(X,Y,log(bound),'FaceAlpha',0.5,'FaceColor','black'); hold on;
+%         s2 = surf(X,Y,log(error)); hold on;
+%         s3 = surf(X,Y,log(error./bound),'FaceAlpha',1,'FaceColor','magenta'); hold on;
+%         set(gca,'fontsize',f_size)
+%         xlabel('$x_1$','interpreter','latex','fontsize',f_size+10)
+%         ylabel('$x_2$','interpreter','latex','fontsize',f_size+10)
+%         grid on
+%         leg = legend('ln($(f_1(x_1)-f_2(x_2))^2)$','ln$(\gamma_x (x_1-x_2)^2 + \gamma)$', 'ln\Bigg($\frac{(f(x_1)-f(x_2))^2}{\gamma (x_1-x_2)^2 + \gamma_{affine}}$\Bigg)');
+%         set(leg,'fontsize',f_size,'interpreter','latex','location','best')
+%         box
+%         s.EdgeColor = 'none'; s2.EdgeColor = 'none'; s3.EdgeColor = 'cyan';
 
     else
 
         for i=1:Nsamples
             for j = 1:Nsamples
                 error(i,j) = norm(f_1(:,i)-f_2(:,j));
-                bound(i,j) = gamma_val*(norm(samp_space_1(:,i)-samp_space_2(:,j)))+gamma_affine_val;
+                bound(i,j) = gamma_val*(samp_space_1(i)-samp_space_2(j)).^2 + gamma_val2*(samp_space_1(i)).^2 + gamma_val3*(samp_space_2(j)).^2+gamma_affine_val;
             end
         end
 
@@ -656,7 +702,7 @@ check_negative(check_output);
 output_inspect = difference - check_output;
 
 mean(mean(output_inspect))
- 
+
 % end
 % 
 % save('W_save_BinaryQuant.mat','W_1','Wc_1','b_1','bc_1','Wl_1','bl_1','Wx_1','bx_1');
